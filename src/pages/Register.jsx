@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   generateRSAKeyPair,
   exportPublicKey,
@@ -9,7 +9,6 @@ import {
   wrapPrivateKey,
   bufferToBase64,
 } from "../utils/crypto";
-import axios from "axios";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -19,7 +18,7 @@ export default function Register() {
 
   const handleRegister = async () => {
     if (!username || !password) {
-      alert("Fill all fields");
+      alert("Please fill all fields");
       return;
     }
 
@@ -30,8 +29,6 @@ export default function Register() {
 
     try {
       setLoading(true);
-
-      console.log("START REGISTER");
 
       // 1. Generate RSA keys
       const { publicKey, privateKey } = await generateRSAKeyPair();
@@ -47,42 +44,37 @@ export default function Register() {
       const wrappingKey = await deriveKey(password, salt);
 
       // 5. Wrap private key
-      const wrappedPrivateKey = await wrapPrivateKey(privateKey, wrappingKey);
+      const wrappedPrivateKey = await wrapPrivateKey(
+        privateKey,
+        wrappingKey
+      );
 
-      console.log("SENDING REQUEST...");
-
-      // 6. Send request (IMPORTANT FIX HERE)
-      const res = await axios({
-        method: "POST",
-        url: "https://whisperbox.koyeb.app/auth/register",
-        data: {
-          username: username.toLowerCase().trim(),
-          password,
-          display_name: username.trim(),
-          public_key: publicKeyBase64,
-          wrapped_private_key: wrappedPrivateKey,
-          pbkdf2_salt: saltBase64,
-        },
-        timeout: 15000, // 🔥 prevents hanging
+      // 6. Send to backend
+      await axios.post("https://whisperbox.koyeb.app/auth/register", {
+        username: username.toLowerCase().trim(),
+        password,
+        display_name: username.trim(),
+        public_key: publicKeyBase64,
+        wrapped_private_key: wrappedPrivateKey,
+        pbkdf2_salt: saltBase64,
       });
-
-      console.log("SUCCESS:", res.data);
 
       alert("Registration successful ✅");
 
-      // Clear inputs
+      // Reset fields
       setUsername("");
       setPassword("");
 
+      // Redirect to login
+      navigate("/login");
+
     } catch (error) {
-      console.error("ERROR:", error);
+      console.error(error);
 
       if (error.response) {
         alert(JSON.stringify(error.response.data));
-      } else if (error.request) {
-        alert("Server not responding (network/CORS)");
       } else {
-        alert("Unexpected error");
+        alert("Network error ❌");
       }
     } finally {
       setLoading(false);
@@ -90,57 +82,89 @@ export default function Register() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Register</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleRegister();
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+      }}
+    >
+      <div
+        style={{
+          width: "340px",
+          backgroundColor: "#fff",
+          padding: "30px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
         }}
       >
+        <h2 style={{ textAlign: "center", marginBottom: "10px" }}>
+          Create Account
+        </h2>
 
-        <div style={{
-  height: "100vh",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  flexDirection: "column",
-  gap: "10px"
-}}>
-  <h1>Register</h1>
-
-  <input placeholder="username" />
-  <input placeholder="password" type="password" />
-
-
-  <p onClick={() => navigate("/login")} style={{cursor: "pointer"}}>
-    Already have an account? Login
-  </p>
-</div>
-
-
-
-
-        {/* <input
+        {/* Username */}
+        <input
           value={username}
-          placeholder="username"
-          autoComplete="off"
+          placeholder="Username"
           onChange={(e) => setUsername(e.target.value)}
-        /> */}
+          style={{
+            padding: "12px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
 
-        {/* <input
+        {/* Password */}
+        <input
           value={password}
           type="password"
-          placeholder="password"
-          autoComplete="new-password"
+          placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
-        /> */}
+          style={{
+            padding: "12px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
+        {/* Register Button */}
+        <button
+          onClick={handleRegister}
+          disabled={loading}
+          style={{
+            padding: "12px",
+            borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#4f46e5",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "0.2s",
+          }}
+        >
+          {loading ? "Creating..." : "Register"}
         </button>
-      </form>
+
+        {/* Link to Login */}
+        <p
+          onClick={() => navigate("/login")}
+          style={{
+            textAlign: "center",
+            fontSize: "14px",
+            color: "#4f46e5",
+            cursor: "pointer",
+          }}
+        >
+          Already have an account? Login
+        </p>
+      </div>
     </div>
   );
 }
