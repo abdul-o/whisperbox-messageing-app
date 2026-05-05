@@ -1,4 +1,4 @@
-// src/pages/Register.jsx
+import { useNavigate } from "react-router-dom";
 
 import { useState } from "react";
 import {
@@ -15,6 +15,7 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     if (!username || !password) {
@@ -98,20 +99,43 @@ export default function Register() {
           handleRegister();
         }}
       >
-        <input
+
+        <div style={{
+  height: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  flexDirection: "column",
+  gap: "10px"
+}}>
+  <h1>Register</h1>
+
+  <input placeholder="username" />
+  <input placeholder="password" type="password" />
+
+
+  <p onClick={() => navigate("/login")} style={{cursor: "pointer"}}>
+    Already have an account? Login
+  </p>
+</div>
+
+
+
+
+        {/* <input
           value={username}
           placeholder="username"
           autoComplete="off"
           onChange={(e) => setUsername(e.target.value)}
-        />
+        /> */}
 
-        <input
+        {/* <input
           value={password}
           type="password"
           placeholder="password"
           autoComplete="new-password"
           onChange={(e) => setPassword(e.target.value)}
-        />
+        /> */}
 
         <button type="submit" disabled={loading}>
           {loading ? "Registering..." : "Register"}
