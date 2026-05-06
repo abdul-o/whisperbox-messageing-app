@@ -118,7 +118,7 @@ export default function Login() {
         JSON.stringify(user)
       );
 
-      alert("Login successful ");
+
 
 
       navigate("/chat");
@@ -265,14 +265,14 @@ export default function Login() {
   // };
 
   return (
-    <div
+    <div className="min-h-screen bg-[] flex items-center justify-center px-4"
       style={{
         height: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         background:
-          "linear-gradient(135deg, #4f46e5, #312e81)",
+          "#0f172a",
       }}
     >
       <div
@@ -354,7 +354,7 @@ export default function Login() {
             borderRadius: "8px",
             border: "none",
             backgroundColor:
-              "#4f46e5",
+              "#0f172a",
 
             color: "#fff",
             fontWeight: "bold",

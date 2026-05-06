@@ -74,7 +74,7 @@ const res = await axios.post(
   }
 );
 
-    alert("Registration successful ");
+
 
     setUsername("");
     setPassword("");
@@ -112,7 +112,7 @@ const res = await axios.post(
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+        background: "#0f172a",
       }}
     >
       <div
@@ -166,7 +166,7 @@ const res = await axios.post(
             padding: "12px",
             borderRadius: "8px",
             border: "none",
-            backgroundColor: "#4f46e5",
+            backgroundColor: "#0f172a",
             color: "#fff",
             fontWeight: "bold",
             cursor: "pointer",
@@ -182,7 +182,7 @@ const res = await axios.post(
           style={{
             textAlign: "center",
             fontSize: "14px",
-            color: "#4f46e5",
+            color: "#0f172a",
             cursor: "pointer",
           }}
         >

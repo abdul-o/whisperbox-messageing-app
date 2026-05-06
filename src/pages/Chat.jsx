@@ -172,83 +172,155 @@ export default function Chat() {
 
       // SEND
 
-console.log("CURRENT USER:");
-console.log(window.user);
+      console.log("CURRENT USER:");
+      console.log(window.user);
 
-console.log("RECIPIENT USER:");
-console.log(recipientUser);
+      console.log("RECIPIENT USER:");
+      console.log(recipientUser);
 
-console.log("MESSAGE:");
-console.log(message);
+      console.log("MESSAGE:");
+      console.log(message);
 
-console.log("PUBLIC KEY:");
-console.log(publicKeyBase64);
+      console.log("PUBLIC KEY:");
+      console.log(publicKeyBase64);
 
-console.log("TOKEN:");
-console.log(window.token);
-
-
+      console.log("TOKEN:");
+      console.log(window.token);
 
 
 
-const payload = {
-  recipient_user_id: recipientUser.id,
-
-  encrypted_payload: {
-    ciphertext: btoa(
-      String.fromCharCode(
-        ...new Uint8Array(ciphertext)
-      )
-    ),
-
-    iv: btoa(
-      String.fromCharCode(...iv)
-    ),
-
-    encrypted_key: btoa(
-      String.fromCharCode(
-        ...new Uint8Array(encryptedKey)
-      )
-    ),
-  },
-};
-
-console.log("FINAL PAYLOAD:");
-console.log(payload);
 
 
-const token =
-  localStorage.getItem("token");
+      const payload = {
+        recipient_user_id: recipientUser.id,
 
-await axios.post(
-  `${API}/messages`,
-  {
-    to: recipientUser.id,
+        encrypted_payload: {
+          ciphertext: btoa(
+            String.fromCharCode(
+              ...new Uint8Array(ciphertext)
+            )
+          ),
 
-    encrypted_payload: {
-      ciphertext: btoa(
-        String.fromCharCode(
-          ...new Uint8Array(ciphertext)
-        )
-      ),
+          iv: btoa(
+            String.fromCharCode(...iv)
+          ),
 
-      iv: btoa(
-        String.fromCharCode(...iv)
-      ),
+          encrypted_key: btoa(
+            String.fromCharCode(
+              ...new Uint8Array(encryptedKey)
+            )
+          ),
+        },
+      };
 
-      encrypted_key: btoa(
-        String.fromCharCode(
-          ...new Uint8Array(encryptedKey)
-        )
-      ),
-    },
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+      console.log("FINAL PAYLOAD:");
+      console.log(payload);
+
+
+      const token =
+        localStorage.getItem("token");
+
+
+
+      await axios.post(
+        `${API}/messages`,
+        {
+          to: recipientUser.id,
+
+          payload: {
+            ciphertext: btoa(
+              String.fromCharCode(
+                ...new Uint8Array(ciphertext)
+              )
+            ),
+
+            iv: btoa(
+              String.fromCharCode(...iv)
+            ),
+
+            encrypted_key: btoa(
+              String.fromCharCode(
+                ...new Uint8Array(encryptedKey)
+              )
+            ),
+
+            encryptedKeyForSelf: btoa(
+              String.fromCharCode(
+                ...new Uint8Array(encryptedKey)
+              )
+            ),
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+
+
+
+
+      // await axios.post(
+      //   `${API}/messages`,
+      //   {
+      //     to: recipientUser.id,
+
+      //     payload: {
+      //       ciphertext: btoa(
+      //         String.fromCharCode(
+      //           ...new Uint8Array(ciphertext)
+      //         )
+      //       ),
+
+      //       iv: btoa(
+      //         String.fromCharCode(...iv)
+      //       ),
+
+      //       encrypted_key: btoa(
+      //         String.fromCharCode(
+      //           ...new Uint8Array(encryptedKey)
+      //         )
+      //       ),
+      //     },
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //     },
+      //   }
+      // );
+
+      // await axios.post(
+      //   `${API}/messages`,
+      //   {
+      //     to: recipientUser.id,
+
+      //     encrypted_payload: {
+      //       ciphertext: btoa(
+      //         String.fromCharCode(
+      //           ...new Uint8Array(ciphertext)
+      //         )
+      //       ),
+
+      //       iv: btoa(
+      //         String.fromCharCode(...iv)
+      //       ),
+
+      //       encrypted_key: btoa(
+      //         String.fromCharCode(
+      //           ...new Uint8Array(encryptedKey)
+      //         )
+      //       ),
+      //     },
+      //   },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
 
       // UPDATE UI
@@ -265,15 +337,15 @@ await axios.post(
     } catch (err) {
       console.error("SEND ERROR:");
 
-console.error(err);
+      console.error(err);
 
-if (err.response) {
-  console.log("STATUS:");
-  console.log(err.response.status);
+      if (err.response) {
+        console.log("STATUS:");
+        console.log(err.response.status);
 
-  console.log("DATA:");
-  console.log(err.response.data);
-}
+        console.log("DATA:");
+        console.log(err.response.data);
+      }
       alert("Failed to send message");
 
     } finally {
