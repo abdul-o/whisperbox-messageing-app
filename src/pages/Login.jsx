@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
 import {
   deriveKey,
   unwrapPrivateKey,
@@ -8,9 +9,20 @@ import {
 } from "../utils/crypto";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
   const navigate = useNavigate();
+
+
+
+
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -19,7 +31,10 @@ export default function Login() {
     }
 
     try {
-      // 1. Login request
+      setLoading(true);
+
+      console.log("STEP 1: Sending login request");
+
       const res = await axios.post(
         "https://whisperbox.koyeb.app/auth/login",
         {
@@ -28,32 +43,226 @@ export default function Login() {
         }
       );
 
-      const user = res.data.user;
 
-      //  Derive wrapping key
-      const salt = base64ToBuffer(user.pbkdf2_salt);
-      const wrappingKey = await deriveKey(password, salt);
-
-      //  Unwrap private key
-      const privateKey = await unwrapPrivateKey(
-        user.wrapped_private_key,
-        wrappingKey
+      localStorage.setItem(
+        "token",
+        res.data.access_token
       );
 
-      //  Store in memory
+      console.log(
+        "TOKEN SAVED:",
+        localStorage.getItem("token")
+      );
+
+
+
+      console.log("STEP 2: Login response");
+      console.log(res.data);
+
+      const user = res.data.user;
+
+      console.log("STEP 3: User object");
+      console.log(user);
+
+      if (!user.wrapped_private_key) {
+        throw new Error(
+          "wrapped_private_key missing"
+        );
+      }
+
+      if (!user.pbkdf2_salt) {
+        throw new Error(
+          "pbkdf2_salt missing"
+        );
+      }
+
+      console.log("STEP 4: Decode salt");
+
+      const salt = new Uint8Array(
+        base64ToBuffer(user.pbkdf2_salt)
+      );
+
+      console.log("STEP 5: Deriving key");
+
+      const wrappingKey =
+        await deriveKey(
+          password,
+          salt
+        );
+
+      console.log("STEP 6: Unwrapping key");
+
+      const privateKey =
+        await unwrapPrivateKey(
+          user.wrapped_private_key,
+          wrappingKey
+        );
+
+      console.log("STEP 7: SUCCESS");
+
+      // store auth
       window.privateKey = privateKey;
-      window.token = res.data.access_token;
 
-      alert("Login successful ✅");
+      window.token =
+        res.data.access_token;
 
-      //  Navigate to chat
+      window.user = user;
+
+      localStorage.setItem(
+        "token",
+        res.data.access_token
+      );
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+
+      alert("Login successful ");
+
+
       navigate("/chat");
 
+
     } catch (err) {
+
+      console.error(
+        "FULL LOGIN ERROR:"
+      );
+
       console.error(err);
+
+      if (err.response) {
+        console.log(
+          err.response.data
+        );
+      }
+
       alert("Login failed ❌");
+
+    } finally {
+
+      setLoading(false);
     }
   };
+
+
+
+  // const handleLogin = async () => {
+  //   if (!username || !password) {
+  //     alert("Please fill all fields");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     // =========================
+  //     // LOGIN REQUEST
+  //     // =========================
+
+  //     const res = await axios.post(
+  //       "https://whisperbox.koyeb.app/auth/login",
+  //       {
+  //         username:
+  //           username.toLowerCase(),
+
+  //         password,
+  //       }
+  //     );
+
+
+  //     // =========================
+  //     // USER DATA
+  //     // =========================
+
+  //     const user = res.data.user;
+
+
+
+
+
+  //     // =========================
+  //     // RESTORE PRIVATE KEY
+  //     // =========================
+
+  //     const salt = base64ToBuffer(
+  //       user.pbkdf2_salt
+  //     );
+
+  //     const wrappingKey =
+  //       await deriveKey(
+  //         password,
+  //         salt
+  //       );
+
+  //     const privateKey =
+  //       await unwrapPrivateKey(
+  //         user.wrapped_private_key,
+
+  //         wrappingKey
+  //       );
+
+  //     // =========================
+  //     // STORE AUTH
+  //     // =========================
+
+  //     window.privateKey = privateKey;
+
+  //     window.token =
+  //       res.data.access_token;
+
+  //     window.user = user;
+
+  //     // localStorage
+
+  //     localStorage.setItem(
+  //       "token",
+  //       res.data.access_token
+  //     );
+
+  //     localStorage.setItem(
+  //       "user",
+  //       JSON.stringify(user)
+  //     );
+
+  //     // =========================
+  //     // SUCCESS
+  //     // =========================
+
+  //     alert("Login successful ✅");
+
+  //     navigate("/chat");
+
+  //   } catch (err) {
+
+  //     console.error(
+  //       "LOGIN ERROR:",
+  //       err
+  //     );
+
+  //     if (err.response) {
+
+  //       console.log(
+  //         err.response.data
+  //       );
+
+  //       alert(
+  //         JSON.stringify(
+  //           err.response.data
+  //         )
+  //       );
+
+  //     } else {
+
+  //       alert("Login failed ❌");
+  //     }
+
+  //   } finally {
+
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div
@@ -62,71 +271,108 @@ export default function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f5f7fb",
+        background:
+          "linear-gradient(135deg, #4f46e5, #312e81)",
       }}
     >
       <div
         style={{
-          width: "320px",
-          padding: "30px",
-          borderRadius: "10px",
+          width: "350px",
+          padding: "35px",
+          borderRadius: "16px",
           backgroundColor: "#ffffff",
-          boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.2)",
+
           display: "flex",
           flexDirection: "column",
-          gap: "15px",
+          gap: "18px",
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "10px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "10px",
+            color: "#111827",
+          }}
+        >
           Login
         </h2>
 
-        {/* Username */}
+        {/* USERNAME */}
+
         <input
           value={username}
           placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
+          autoComplete="off"
+          onChange={(e) =>
+            setUsername(
+              e.target.value
+            )
+          }
           style={{
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
+            padding: "12px",
+            borderRadius: "8px",
+            border:
+              "1px solid #d1d5db",
+
             outline: "none",
+            fontSize: "15px",
           }}
         />
 
-        {/* Password */}
+        {/* PASSWORD */}
+
         <input
           value={password}
           type="password"
           placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          onChange={(e) =>
+            setPassword(
+              e.target.value
+            )
+          }
           style={{
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
+            padding: "12px",
+            borderRadius: "8px",
+            border:
+              "1px solid #d1d5db",
+
             outline: "none",
+            fontSize: "15px",
           }}
         />
 
-        {/* Button */}
+        {/* LOGIN BUTTON */}
+
         <button
           onClick={handleLogin}
+          disabled={loading}
           style={{
-            padding: "10px",
-            borderRadius: "6px",
+            padding: "12px",
+            borderRadius: "8px",
             border: "none",
-            backgroundColor: "#4f46e5",
+            backgroundColor:
+              "#4f46e5",
+
             color: "#fff",
             fontWeight: "bold",
+            fontSize: "15px",
             cursor: "pointer",
           }}
         >
-          Login
+          {loading
+            ? "Logging in..."
+            : "Login"}
         </button>
 
-        {/* Link to Register */}
+        {/* NAVIGATION */}
+
         <p
-          onClick={() => navigate("/register")}
+          onClick={() =>
+            navigate("/register")
+          }
           style={{
             textAlign: "center",
             cursor: "pointer",
@@ -134,7 +380,8 @@ export default function Login() {
             fontSize: "14px",
           }}
         >
-          Don't have an account? Register
+          Don't have an account?
+          Register
         </p>
       </div>
     </div>

@@ -16,70 +16,94 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async () => {
-    if (!username || !password) {
-      alert("Please fill all fields");
-      return;
-    }
+const handleRegister = async () => {
+  if (!username || !password) {
+    alert("Please fill all fields");
+    return;
+  }
 
-    if (password.length < 8) {
-      alert("Password must be at least 8 characters");
-      return;
-    }
+  if (password.length < 8) {
+    alert("Password must be at least 8 characters");
+    return;
+  }
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      // 1. Generate RSA keys
-      const { publicKey, privateKey } = await generateRSAKeyPair();
+    //  Generate RSA keys
+    const { publicKey, privateKey } =
+      await generateRSAKeyPair();
 
-      // 2. Export public key
-      const publicKeyBase64 = await exportPublicKey(publicKey);
+    //  Export public key
+    const publicKeyBase64 =
+      await exportPublicKey(publicKey);
 
-      // 3. Generate salt
-      const salt = generateSalt();
-      const saltBase64 = bufferToBase64(salt);
+    //  Generate salt
+    const salt = generateSalt();
 
-      // 4. Derive wrapping key
-      const wrappingKey = await deriveKey(password, salt);
+    const saltBase64 =
+      bufferToBase64(salt);
 
-      // 5. Wrap private key
-      const wrappedPrivateKey = await wrapPrivateKey(
+    //  Derive wrapping key
+    const wrappingKey =
+      await deriveKey(password, salt);
+
+    // Encrypt private key
+    const wrappedPrivateKey =
+      await wrapPrivateKey(
         privateKey,
         wrappingKey
       );
 
-      // 6. Send to backend
-      await axios.post("https://whisperbox.koyeb.app/auth/register", {
-        username: username.toLowerCase().trim(),
-        password,
-        display_name: username.trim(),
-        public_key: publicKeyBase64,
-        wrapped_private_key: wrappedPrivateKey,
-        pbkdf2_salt: saltBase64,
-      });
+    //  Send to backend
+const res = await axios.post(
+  "https://whisperbox.koyeb.app/auth/register",
+  {
+    username: username.toLowerCase(),
+    password,
+    display_name: username,
 
-      alert("Registration successful ✅");
+    public_key:
+      publicKeyBase64,
 
-      // Reset fields
-      setUsername("");
-      setPassword("");
+    wrapped_private_key:
+      wrappedPrivateKey,
 
-      // Redirect to login
-      navigate("/login");
+    pbkdf2_salt:
+      saltBase64,
+  }
+);
 
-    } catch (error) {
-      console.error(error);
+    alert("Registration successful ");
 
-      if (error.response) {
-        alert(JSON.stringify(error.response.data));
-      } else {
-        alert("Network error ❌");
-      }
-    } finally {
-      setLoading(false);
+    setUsername("");
+    setPassword("");
+
+    navigate("/login");
+
+  } catch (error) {
+    console.error(
+      "REGISTER ERROR:",
+      error
+    );
+
+    if (error.response) {
+      console.log(error.response.data);
+
+      alert(
+        JSON.stringify(
+          error.response.data
+        )
+      );
+
+    } else {
+      alert("Network error ");
     }
-  };
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div
