@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import { decryptMessage } from "../utils/crypto";
 const API = "https://whisperbox.koyeb.app";
 
 export default function Chat() {
@@ -14,8 +15,161 @@ export default function Chat() {
   const [darkMode, setDarkMode] = useState(true);
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
+// useEffect(() => {
+//   if (!recipientUser) return;
+
+// const fetchMessages = async () => {
+//   try {
+//     const token =
+//       localStorage.getItem("token");
+
+//     const response = await axios.get(
+//       `${API}/conversations/${recipientUser.id}/messages`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+
+//     console.log(
+//       "Fetched messages:",
+//       response.data
+//     );
+
+//     setMessages(response.data);
+
+//   } catch (error) {
+//     console.error(
+//       "Fetch messages error:",
+//       error
+//     );
+//   }
+// };
+
+//   fetchMessages();
+
+//   const interval = setInterval(fetchMessages, 3000);
+
+//   return () => clearInterval(interval);
+
+// }, [recipientUser]);
+
+
+
+
+
+
+
+
+
+
+
 
   // SEARCH USER
+
+
+
+
+
+
+
+useEffect(() => {
+  if (!recipientUser) return;
+
+  const fetchMessages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${API}/conversations/${recipientUser.id}/messages`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const privateKeyJwk = JSON.parse(
+        localStorage.getItem("privateKey")
+      );
+
+      const privateKey =
+        await crypto.subtle.importKey(
+          "jwk",
+          privateKeyJwk,
+          {
+            name: "RSA-OAEP",
+            hash: "SHA-256",
+          },
+          true,
+          ["decrypt"]
+        );
+
+      const decryptedMessages =
+        await Promise.all(
+          response.data.map(async (msg) => {
+            try {
+              const decryptedText =
+                await decryptMessage(
+                  msg.payload,
+
+                );
+
+              return {
+                id: msg.id,
+                text: decryptedText,
+                sender:
+                  msg.from_user_id ===
+                  currentUser.id
+                    ? "me"
+                    : "them",
+              };
+            } catch {
+              return {
+                id: msg.id,
+                text: "[Unable to decrypt]",
+                sender:
+                  msg.from_user_id ===
+                  currentUser.id
+                    ? "me"
+                    : "them",
+              };
+            }
+          })
+        );
+
+      setMessages(decryptedMessages);
+
+    } catch (error) {
+      console.error(
+        "Fetch messages error:",
+        error
+      );
+    }
+  };
+
+  fetchMessages();
+
+  const interval = setInterval(
+    fetchMessages,
+    3000
+  );
+
+  return () => clearInterval(interval);
+
+}, [recipientUser]);
+
+
+
+
+
+
+
+
+
+
+
   const searchUser = async () => {
     if (!recipientUsername.trim()) {
       alert("Enter username");
@@ -41,7 +195,7 @@ export default function Chat() {
 
       setRecipientUser(foundUser);
 
-      loadMessages(foundUser.id);
+
 
     } catch (err) {
       console.log(err);
@@ -50,37 +204,13 @@ export default function Chat() {
   };
 
   // LOAD CHAT HISTORY
-  const loadMessages = async (userId) => {
-    try {
-      const res = await axios.get(
-        `${API}/messages/history/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${window.token}`,
-          },
-        }
-      );
 
-      const formatted = res.data.map((msg) => ({
-        text:
-          msg.sender_id === currentUser.id
-            ? "Encrypted message sent"
-            : "Encrypted message received",
-        sender:
-          msg.sender_id === currentUser.id
-            ? "me"
-            : "them",
-      }));
-
-      setMessages(formatted);
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   // SEND MESSAGE
   const sendMessage = async () => {
+
+
+
     if (!recipientUser) {
       alert("Search for a user first");
       return;
@@ -353,11 +483,7 @@ export default function Chat() {
     }
   };
 
-  useEffect(() => {
-    if (recipientUser) {
-      loadMessages(recipientUser.id);
-    }
-  }, []);
+
 
   return (
     <div
@@ -587,9 +713,9 @@ export default function Chat() {
             gap: "10px",
           }}
         >
-          {messages.map((msg, index) => (
+          {messages.map((msg) => (
             <div
-              key={index}
+              key={msg.id}
               style={{
                 alignSelf:
                   msg.sender === "me"
@@ -617,6 +743,8 @@ export default function Chat() {
               }}
             >
               {msg.text}
+
+
             </div>
           ))}
         </div>

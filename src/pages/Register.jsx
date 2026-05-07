@@ -34,6 +34,17 @@ const handleRegister = async () => {
     const { publicKey, privateKey } =
       await generateRSAKeyPair();
 
+      const privateKeyJwk =
+  await crypto.subtle.exportKey(
+    "jwk",
+    privateKey
+  );
+
+localStorage.setItem(
+  "privateKey",
+  JSON.stringify(privateKeyJwk)
+);
+
     //  Export public key
     const publicKeyBase64 =
       await exportPublicKey(publicKey);

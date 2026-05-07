@@ -239,3 +239,91 @@ export async function unwrapPrivateKey(
     ["decrypt"]
   );
 }
+
+
+
+// Decrypt Received message
+
+export async function decryptMessage(payload) {
+
+  try {
+
+    const privateKeyJwk = JSON.parse(
+      localStorage.getItem("privateKey")
+    );
+
+    const privateKey = await window.crypto.subtle.importKey(
+      "jwk",
+      privateKeyJwk,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      true,
+      ["decrypt"]
+    );
+
+    // Decode encrypted AES key
+
+const encryptedKey = Uint8Array.from(
+  atob(payload.encryptedKeyForSelf),
+  c => c.charCodeAt(0)
+);
+
+
+
+
+
+
+
+    // Decrypt AES key
+    const aesKeyRaw = await window.crypto.subtle.decrypt(
+      {
+        name: "RSA-OAEP",
+      },
+      privateKey,
+      encryptedKey
+    );
+
+    // Import AES key
+    const aesKey = await window.crypto.subtle.importKey(
+      "raw",
+      aesKeyRaw,
+      {
+        name: "AES-GCM",
+      },
+      false,
+      ["decrypt"]
+    );
+
+    // Decode IV
+    const iv = Uint8Array.from(
+      atob(payload.iv),
+      c => c.charCodeAt(0)
+    );
+
+    // Decode ciphertext
+    const ciphertext = Uint8Array.from(
+      atob(payload.ciphertext),
+      c => c.charCodeAt(0)
+    );
+
+    // AES decrypt
+    const decrypted = await window.crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      aesKey,
+      ciphertext
+    );
+
+    return new TextDecoder().decode(decrypted);
+
+  } catch (err) {
+
+    console.error("Decrypt error:", err);
+
+    return "[Unable to decrypt]";
+  }
+}

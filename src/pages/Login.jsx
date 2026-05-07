@@ -44,10 +44,12 @@ export default function Login() {
       );
 
 
-      localStorage.setItem(
-        "token",
-        res.data.access_token
-      );
+      // localStorage.setItem(
+      //   "token",
+      //   res.data.access_token
+      // );
+
+
 
       console.log(
         "TOKEN SAVED:",
