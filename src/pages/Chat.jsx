@@ -15,150 +15,96 @@ export default function Chat() {
   const [darkMode, setDarkMode] = useState(true);
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
-// useEffect(() => {
-//   if (!recipientUser) return;
-
-// const fetchMessages = async () => {
-//   try {
-//     const token =
-//       localStorage.getItem("token");
-
-//     const response = await axios.get(
-//       `${API}/conversations/${recipientUser.id}/messages`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     console.log(
-//       "Fetched messages:",
-//       response.data
-//     );
-
-//     setMessages(response.data);
-
-//   } catch (error) {
-//     console.error(
-//       "Fetch messages error:",
-//       error
-//     );
-//   }
-// };
-
-//   fetchMessages();
-
-//   const interval = setInterval(fetchMessages, 3000);
-
-//   return () => clearInterval(interval);
-
-// }, [recipientUser]);
-
-
-
-
-
-
-
-
-
-
 
 
   // SEARCH USER
 
+  useEffect(() => {
+    if (!recipientUser) return;
 
+    const fetchMessages = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-
-
-
-
-useEffect(() => {
-  if (!recipientUser) return;
-
-  const fetchMessages = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.get(
-        `${API}/conversations/${recipientUser.id}/messages`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const privateKeyJwk = JSON.parse(
-        localStorage.getItem("privateKey")
-      );
-
-      const privateKey =
-        await crypto.subtle.importKey(
-          "jwk",
-          privateKeyJwk,
+        const response = await axios.get(
+          `${API}/conversations/${recipientUser.id}/messages`,
           {
-            name: "RSA-OAEP",
-            hash: "SHA-256",
-          },
-          true,
-          ["decrypt"]
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
-      const decryptedMessages =
-        await Promise.all(
-          response.data.map(async (msg) => {
-            try {
-              const decryptedText =
-                await decryptMessage(
-                  msg.payload,
-
-                );
-
-              return {
-                id: msg.id,
-                text: decryptedText,
-                sender:
-                  msg.from_user_id ===
-                  currentUser.id
-                    ? "me"
-                    : "them",
-              };
-            } catch {
-              return {
-                id: msg.id,
-                text: "[Unable to decrypt]",
-                sender:
-                  msg.from_user_id ===
-                  currentUser.id
-                    ? "me"
-                    : "them",
-              };
-            }
-          })
+        const privateKeyJwk = JSON.parse(
+          localStorage.getItem("privateKey")
         );
 
-      setMessages(decryptedMessages);
+        const privateKey =
+          await crypto.subtle.importKey(
+            "jwk",
+            privateKeyJwk,
+            {
+              name: "RSA-OAEP",
+              hash: "SHA-256",
+            },
+            true,
+            ["decrypt"]
+          );
 
-    } catch (error) {
-      console.error(
-        "Fetch messages error:",
-        error
-      );
-    }
-  };
+        const decryptedMessages =
+          await Promise.all(
+            response.data.map(async (msg) => {
+              try {
+                const decryptedText =
+                  await decryptMessage(
+                    msg.payload,
+                    msg.from_user_id
 
-  fetchMessages();
+                  );
 
-  const interval = setInterval(
-    fetchMessages,
-    3000
-  );
+                return {
+                  id: msg.id,
+                  text: decryptedText,
+                  sender:
+                    msg.from_user_id ===
+                      currentUser.id
+                      ? "me"
+                      : "them",
+                };
+              } catch {
+                return {
+                  id: msg.id,
+                  text: "[Unable to decrypt]",
+                  sender:
+                    msg.from_user_id ===
+                      currentUser.id
+                      ? "me"
+                      : "them",
+                };
+              }
+            })
+          );
 
-  return () => clearInterval(interval);
+        setMessages(decryptedMessages);
 
-}, [recipientUser]);
+      } catch (error) {
+        console.error(
+          "Fetch messages error:",
+          error
+        );
+      }
+    };
+
+    fetchMessages();
+
+    const interval = setInterval(
+      fetchMessages,
+      3000
+    );
+
+    return () => clearInterval(interval);
+
+  }, [recipientUser]);
 
 
 
@@ -253,6 +199,28 @@ useEffect(() => {
           ["encrypt"]
         );
 
+
+
+      const myPublicKeyBase64 =
+        currentUser.public_key;
+
+      const myPublicKey =
+        await crypto.subtle.importKey(
+          "spki",
+          Uint8Array.from(
+            atob(myPublicKeyBase64),
+            (c) => c.charCodeAt(0)
+          ),
+          {
+            name: "RSA-OAEP",
+            hash: "SHA-256",
+          },
+          true,
+          ["encrypt"]
+        );
+
+
+
       // AES KEY
       const aesKey =
         await crypto.subtle.generateKey(
@@ -297,6 +265,15 @@ useEffect(() => {
             name: "RSA-OAEP",
           },
           publicKey,
+          rawKey
+        );
+
+      const encryptedKeyForSelf =
+        await crypto.subtle.encrypt(
+          {
+            name: "RSA-OAEP",
+          },
+          myPublicKey,
           rawKey
         );
 
@@ -373,12 +350,14 @@ useEffect(() => {
                 ...new Uint8Array(encryptedKey)
               )
             ),
-
             encryptedKeyForSelf: btoa(
               String.fromCharCode(
-                ...new Uint8Array(encryptedKey)
+                ...new Uint8Array(
+                  encryptedKeyForSelf
+                )
               )
             ),
+
           },
         },
         {
