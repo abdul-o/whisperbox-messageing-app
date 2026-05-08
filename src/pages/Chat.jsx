@@ -466,8 +466,8 @@ export default function Chat() {
         display: "flex",
         height: "98vh",
         width: "100vw",
-        padding:"0px",
-        maging:"0px",
+        padding: "0px",
+        maging: "0px",
         background: darkMode
           ? "#0b141a"
           : "#efeae2",

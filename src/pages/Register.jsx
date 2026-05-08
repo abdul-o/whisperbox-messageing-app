@@ -161,7 +161,7 @@ export default function Register() {
           display: "flex",
           flexDirection: "column",
           gap: "15px",
-          height: "36%"
+          height: "44%"
         }}
       >
         <h2 style={{ textAlign: "center", marginBottom: "10px", color: "black" }}>
