@@ -66,6 +66,17 @@ localStorage.setItem(
         wrappingKey
       );
 
+
+console.log({
+  username,
+  password,
+  publicKeyBase64,
+  wrappedPrivateKey,
+  salt,
+});
+
+
+
     //  Send to backend
 const res = await axios.post(
   "https://whisperbox.koyeb.app/auth/register",

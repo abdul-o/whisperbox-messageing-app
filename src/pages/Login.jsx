@@ -94,7 +94,24 @@ export default function Login() {
       console.log("STEP 7: SUCCESS");
 
       // store auth
-      window.privateKey = privateKey;
+
+// EXPORT PRIVATE KEY TO JWK
+const privateKeyJwk =
+  await crypto.subtle.exportKey(
+    "jwk",
+    privateKey
+  );
+
+// SAVE PRIVATE KEY
+localStorage.setItem(
+  "privateKey",
+  JSON.stringify(privateKeyJwk)
+);
+
+
+
+
+
 
       window.token =
         res.data.access_token;
