@@ -50,6 +50,9 @@
   }
 }
 
+
+
+
 * {
   margin: 0;
   padding: 0;
@@ -109,4 +112,15 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+input {
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border: 2px solid #11da97;
+  box-shadow: 0 0 8px #4f46e5;
+  transform: scale(1.02);
 }

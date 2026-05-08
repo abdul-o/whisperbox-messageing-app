@@ -113,11 +113,24 @@ export default function Register() {
       if (error.response) {
         console.log(error.response.data);
 
-        alert(
-          JSON.stringify(
-            error.response.data
-          )
-        );
+        // alert(
+        //   JSON.stringify(
+        //     error.response.data
+        //   )
+        // );
+        if (
+          error.response?.data?.detail
+        ) {
+          setError(
+            "Username already exists"
+          );
+        } else {
+          setError(
+            "Registration failed"
+          );
+        }
+
+
 
       } else {
         alert("Network error ");
@@ -148,9 +161,10 @@ export default function Register() {
           display: "flex",
           flexDirection: "column",
           gap: "15px",
+          height: "36%"
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "10px" }}>
+        <h2 style={{ textAlign: "center", marginBottom: "10px", color: "black" }}>
           Create Account
         </h2>
 
@@ -188,6 +202,18 @@ export default function Register() {
             outline: "none",
           }}
         />
+        {error && (
+          <p className="error-text"
+            style={{
+              color: "red",
+              textAlign: "center"
+
+            }}
+          >
+            {error}
+          </p>
+        )}
+
 
         {/* Register Button */}
         <button
@@ -213,7 +239,8 @@ export default function Register() {
           style={{
             textAlign: "center",
             fontSize: "14px",
-            color: "#0f172a",
+            color: "#4f46e5"
+            ,
             cursor: "pointer",
           }}
         >

@@ -95,18 +95,18 @@ export default function Login() {
 
       // store auth
 
-// EXPORT PRIVATE KEY TO JWK
-const privateKeyJwk =
-  await crypto.subtle.exportKey(
-    "jwk",
-    privateKey
-  );
+      // EXPORT PRIVATE KEY TO JWK
+      const privateKeyJwk =
+        await crypto.subtle.exportKey(
+          "jwk",
+          privateKey
+        );
 
-// SAVE PRIVATE KEY
-localStorage.setItem(
-  "privateKey",
-  JSON.stringify(privateKeyJwk)
-);
+      // SAVE PRIVATE KEY
+      localStorage.setItem(
+        "privateKey",
+        JSON.stringify(privateKeyJwk)
+      );
 
       window.token =
         res.data.access_token;

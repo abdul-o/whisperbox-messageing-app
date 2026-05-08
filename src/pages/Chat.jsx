@@ -527,7 +527,7 @@ export default function Chat() {
               border: "none",
               outline: "none",
               background: darkMode
-                ? "#202c33"
+                ? "#445057"
                 : "#f0f2f5",
               color: darkMode
                 ? "#fff"
