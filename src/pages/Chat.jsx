@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import { decryptMessage } from "../utils/crypto";
 const API = "https://whisperbox.koyeb.app";
 
 export default function Chat() {
+  const navigate = useNavigate();
   const [recipientUsername, setRecipientUsername] = useState("");
   const [recipientUser, setRecipientUser] = useState(null);
 
@@ -15,6 +17,7 @@ export default function Chat() {
   const [darkMode, setDarkMode] = useState(true);
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
+
 
 
   // SEARCH USER
@@ -106,16 +109,6 @@ export default function Chat() {
 
   }, [recipientUser]);
 
-
-
-
-
-
-
-
-
-
-
   const searchUser = async () => {
     if (!recipientUsername.trim()) {
       alert("Enter username");
@@ -148,8 +141,6 @@ export default function Chat() {
       alert("Failed to search user");
     }
   };
-
-  // LOAD CHAT HISTORY
 
 
   // SEND MESSAGE
@@ -294,10 +285,6 @@ export default function Chat() {
       console.log("TOKEN:");
       console.log(window.token);
 
-
-
-
-
       const payload = {
         recipient_user_id: recipientUser.id,
 
@@ -326,8 +313,6 @@ export default function Chat() {
 
       const token =
         localStorage.getItem("token");
-
-
 
       await axios.post(
         `${API}/messages`,
@@ -366,11 +351,6 @@ export default function Chat() {
           },
         }
       );
-
-
-
-
-
       // await axios.post(
       //   `${API}/messages`,
       //   {
@@ -463,12 +443,31 @@ export default function Chat() {
   };
 
 
+  const handleLogout = () => {
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("user");
+
+    localStorage.removeItem("privateKey");
+
+    window.token = null;
+    window.user = null;
+    window.privateKey = null;
+
+    navigate("/login");
+  };
+
+
 
   return (
-    <div
+    <main
       style={{
         display: "flex",
-        height: "100vh",
+        height: "98vh",
+        width: "100vw",
+        padding:"0px",
+        maging:"0px",
         background: darkMode
           ? "#0b141a"
           : "#efeae2",
@@ -478,6 +477,7 @@ export default function Chat() {
       {/* SIDEBAR */}
       <div
         style={{
+
           width: "320px",
           background: darkMode
             ? "#111b21"
@@ -643,32 +643,14 @@ export default function Chat() {
             {/* LOGOUT BUTTON */}
 
             <button
-              onClick={() => {
-
-                // clear auth
-                localStorage.removeItem(
-                  "token"
-                );
-
-                localStorage.removeItem(
-                  "user"
-                );
-
-                window.token = null;
-                window.user = null;
-                window.privateKey = null;
-
-                // redirect
-                window.location.href =
-                  "/login";
-              }}
+              onClick={handleLogout}
 
               style={{
                 border: "none",
                 borderRadius: "20px",
                 padding: "10px 14px",
                 cursor: "pointer",
-                background: "#ef4444",
+                background: "#ff0000",
                 color: "#fff",
                 fontWeight: "bold",
               }}
@@ -777,6 +759,6 @@ export default function Chat() {
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

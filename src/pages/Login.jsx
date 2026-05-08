@@ -108,11 +108,6 @@ localStorage.setItem(
   JSON.stringify(privateKeyJwk)
 );
 
-
-
-
-
-
       window.token =
         res.data.access_token;
 

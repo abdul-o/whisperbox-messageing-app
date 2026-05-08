@@ -15,117 +15,118 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-const handleRegister = async () => {
-  if (!username || !password) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  if (password.length < 8) {
-    alert("Password must be at least 8 characters");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    //  Generate RSA keys
-    const { publicKey, privateKey } =
-      await generateRSAKeyPair();
-
-      const privateKeyJwk =
-  await crypto.subtle.exportKey(
-    "jwk",
-    privateKey
-  );
-
-localStorage.setItem(
-  "privateKey",
-  JSON.stringify(privateKeyJwk)
-);
-
-    //  Export public key
-    const publicKeyBase64 =
-      await exportPublicKey(publicKey);
-
-    //  Generate salt
-    const salt = generateSalt();
-
-    const saltBase64 =
-      bufferToBase64(salt);
-
-    //  Derive wrapping key
-    const wrappingKey =
-      await deriveKey(password, salt);
-
-    // Encrypt private key
-    const wrappedPrivateKey =
-      await wrapPrivateKey(
-        privateKey,
-        wrappingKey
-      );
-
-
-console.log({
-  username,
-  password,
-  publicKeyBase64,
-  wrappedPrivateKey,
-  salt,
-});
-
-
-
-    //  Send to backend
-const res = await axios.post(
-  "https://whisperbox.koyeb.app/auth/register",
-  {
-    username: username.toLowerCase(),
-    password,
-    display_name: username,
-
-    public_key:
-      publicKeyBase64,
-
-    wrapped_private_key:
-      wrappedPrivateKey,
-
-    pbkdf2_salt:
-      saltBase64,
-  }
-);
-
-
-
-    setUsername("");
-    setPassword("");
-
-    navigate("/login");
-
-  } catch (error) {
-    console.error(
-      "REGISTER ERROR:",
-      error
-    );
-
-    if (error.response) {
-      console.log(error.response.data);
-
-      alert(
-        JSON.stringify(
-          error.response.data
-        )
-      );
-
-    } else {
-      alert("Network error ");
+  const handleRegister = async () => {
+    if (!username || !password) {
+      alert("Please fill all fields");
+      return;
     }
 
-  } finally {
-    setLoading(false);
-  }
-};
+    if (password.length < 8) {
+      alert("Password must be at least 8 characters");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      //  Generate RSA keys
+      const { publicKey, privateKey } =
+        await generateRSAKeyPair();
+
+      const privateKeyJwk =
+        await crypto.subtle.exportKey(
+          "jwk",
+          privateKey
+        );
+
+      localStorage.setItem(
+        "privateKey",
+        JSON.stringify(privateKeyJwk)
+      );
+
+      //  Export public key
+      const publicKeyBase64 =
+        await exportPublicKey(publicKey);
+
+      //  Generate salt
+      const salt = generateSalt();
+
+      const saltBase64 =
+        bufferToBase64(salt);
+
+      //  Derive wrapping key
+      const wrappingKey =
+        await deriveKey(password, salt);
+
+      // Encrypt private key
+      const wrappedPrivateKey =
+        await wrapPrivateKey(
+          privateKey,
+          wrappingKey
+        );
+
+
+      console.log({
+        username,
+        password,
+        publicKeyBase64,
+        wrappedPrivateKey,
+        salt,
+      });
+
+
+
+      //  Send to backend
+      const res = await axios.post(
+        "https://whisperbox.koyeb.app/auth/register",
+        {
+          username: username.toLowerCase(),
+          password,
+          display_name: username,
+
+          public_key:
+            publicKeyBase64,
+
+          wrapped_private_key:
+            wrappedPrivateKey,
+
+          pbkdf2_salt:
+            saltBase64,
+        }
+      );
+
+
+
+      setUsername("");
+      setPassword("");
+
+      navigate("/login");
+
+    } catch (error) {
+      console.error(
+        "REGISTER ERROR:",
+        error
+      );
+
+      if (error.response) {
+        console.log(error.response.data);
+
+        alert(
+          JSON.stringify(
+            error.response.data
+          )
+        );
+
+      } else {
+        alert("Network error ");
+      }
+
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -157,7 +158,11 @@ const res = await axios.post(
         <input
           value={username}
           placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setError("");
+          }}
+          // onChange={(e) => setUsername(e.target.value)}
           style={{
             padding: "12px",
             borderRadius: "8px",
@@ -171,7 +176,11 @@ const res = await axios.post(
           value={password}
           type="password"
           placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError("");
+          }}
+          // onChange={(e) => setPassword(e.target.value)}
           style={{
             padding: "12px",
             borderRadius: "8px",
